@@ -2,19 +2,16 @@
 // Или можно не импортировать,
 // а передавать все нужные объекты прямо из run.js при инициализации new Game().
 
-const Hero = require('./game-models/Hero');
-const Enemy = require('./game-models/Enemy');
-const Boomerang = require('./game-models/Boomerang');
-const View = require('./View');
+
 
 // Основной класс игры.
 // Тут будут все настройки, проверки, запуск.
 
 class Game {
-  constructor({ trackLength }) {
+  // размер поля в высоту, добавляем высоту
+  constructor({ trackLength, trackHeight }) {
     this.trackLength = trackLength;
-    this.hero = new Hero(new Boomerang()); // Герою можно аргументом передать бумеранг.
-    this.enemy = new Enemy();
+
     this.view = new View();
     this.track = [];
     this.regenerateTrack();
@@ -22,24 +19,50 @@ class Game {
 
   regenerateTrack() {
     // Сборка всего необходимого (герой, враг(и), оружие)
-    // в единую структуру данных
-    this.track = new Array(this.trackLength).fill(' ');
-    this.track[this.hero.position] = this.hero.skin;
+
   }
 
   check() {
-    if (this.hero.position === this.enemy.position) {
+    if (
+      this.hero.position.x === this.enemy.position.x &&
+      this.hero.position.y === this.enemy.position.y
+    ) {
       this.hero.die();
     }
   }
 
   play() {
+    this.claviatura();
     setInterval(() => {
       // Let's play!
       this.check();
       this.regenerateTrack();
-      this.view.render(this.track);
+      this.view.renderTrack(this.track);
+    }, 150);
+  }
+
+  claviatura() {
+    const keyboard = {
+      up: () => this.hero.moveTop(),
+      down: () => this.hero.moveDown(),
+      left: () => this.hero.moveLeft(),
+      right: () => this.hero.moveRight(),
+    };
+
+    keypress(process.stdin);
+    process.stdin.on("keypress", (ch, key) => {
+      if (key) {
+        // Вызывает команду, соответствующую нажатой кнопке.
+        if (key.name in keyboard) {
+          keyboard[key.name]();
+        }
+        // Прерывание программы.
+        if (key.ctrl && key.name === "c") {
+          process.exit();
+        }
+      }
     });
+    process.stdin.setRawMode(true);
   }
 }
 

@@ -7,6 +7,6 @@ const game = new Game({
   trackLength: 30,
 });
 
-
+console.log(game.track);
 // Запуск игры.
 game.play();
